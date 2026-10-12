@@ -1,0 +1,58 @@
+name: Aggiorna e pubblica PRIN 2026
+
+on:
+  schedule:
+    - cron: '14 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'data/prin.json'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: prin-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Dipendenze per la lettura dei PDF
+        run: pip install -r requirements.txt
+      - name: Verifica dei dati e del parser
+        run: python -m unittest discover -s tests -v
+      - name: Leggi gli allegati MUR
+        run: python scripts/refresh.py
+      - name: Salva la nuova fotografia nel repository
+        run: |
+          git config user.name "PRIN Data Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/prin.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Aggiorna risultati PRIN 2026"
+            git push
+          fi
+      - name: Prepara il sito pubblico
+        run: |
+          mkdir -p public/data
+          cp index.html styles.css app.js public/
+          cp data/prin.json public/data/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4
