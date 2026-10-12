@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10243b">
+  <meta name="description" content="Esplora i progetti e i contributi MUR dei PRIN 2026 e PRIN Hybrid, per sede, area, settore e ruolo PI o RU.">
+  <title>PRIN 2026 · Osservatorio dei finanziamenti</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='17' fill='%2310243b'/%3E%3Cpath d='M15 47V17h15c9 0 14 4 14 12s-5 12-14 12h-7v6zm8-14h7c4 0 6-1 6-4s-2-4-6-4h-7z' fill='%23aff0d6'/%3E%3Ccircle cx='48' cy='46' r='5' fill='%23ffbc8f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#esplora">Vai ai risultati</a>
+  <header class="site-header">
+    <div class="wrap nav-row">
+      <a class="brand" href="#inizio" aria-label="PRIN 2026, torna all'inizio"><span class="brand-mark">P<span class="brand-dot"></span></span><span>PRIN <small>OSSERVATORIO 2026</small></span></a>
+      <nav aria-label="Navigazione principale"><a href="#esplora">Esplora</a><a href="#classifica">Classifica</a><a href="#metodo">Metodo e fonti</a></nav>
+      <button class="nav-share" type="button" id="shareBtn" aria-label="Copia il link con i filtri correnti">↗ <span>Condividi</span></button>
+    </div>
+  </header>
+
+  <main id="inizio">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> DATI PUBBLICI · PRIN 2026</p>
+          <h1 id="hero-title">La ricerca, <em>sede per sede.</em></h1>
+          <p class="hero-sub">Scopri quali atenei ed enti partecipano ai PRIN 2026 e Hybrid, quanti progetti coordinano o ospitano e quanto finanziamento MUR è stato loro assegnato.</p>
+          <a class="hero-action" href="#esplora">Esplora i risultati <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="hero-art" aria-hidden="true"><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><span class="orbit orbit-three"></span><span class="art-center">2026<small>PRIN</small></span><span class="art-node node-a"></span><span class="art-node node-b"></span><span class="art-node node-c"></span><span class="art-node node-d"></span><span class="art-node node-e"></span></div>
+      </div>
+      <div class="wrap hero-foot"><div class="status-line" id="statusLine" role="status">Caricamento dei dati…</div><a href="#metodo">Come sono calcolati i dati <span aria-hidden="true">↗</span></a></div>
+    </section>
+
+    <section class="wrap overview" aria-label="Numeri principali">
+      <div class="section-kicker"><span>01 / PANORAMICA</span><span id="coverageLabel">Risultati pubblicati e acquisiti</span></div>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-icon mint">◇</div><div class="kpi-value" id="kpiProjects">—</div><div class="kpi-name">progetti finanziati</div><div class="kpi-hint">Contati una volta ciascuno</div></div>
+        <div class="kpi"><div class="kpi-icon peach">€</div><div class="kpi-value" id="kpiFunding">—</div><div class="kpi-name">contributo MUR assegnato</div><div class="kpi-hint">Quote attribuite alle unità</div></div>
+        <div class="kpi"><div class="kpi-icon blue">⌂</div><div class="kpi-value" id="kpiInstitutions">—</div><div class="kpi-name">sedi beneficiarie</div><div class="kpi-hint">Atenei ed enti distinti</div></div>
+        <div class="kpi"><div class="kpi-icon lavender">↗</div><div class="kpi-value" id="kpiUnits">—</div><div class="kpi-name">unità finanziate</div><div class="kpi-hint" id="rolesHint">PI e RU nelle Tabelle B</div></div>
+      </div>
+    </section>
+
+    <section class="wrap explore" id="esplora" aria-labelledby="explore-title">
+      <div class="section-kicker"><span>02 / ESPLORA</span><span>Filtra, confronta, approfondisci</span></div>
+      <div class="section-heading"><div><h2 id="explore-title">Trova la tua sede.</h2><p>I numeri cambiano insieme ai filtri. Apri una sede per vedere i progetti e i contributi delle singole unità.</p></div><button class="export-btn" type="button" id="exportBtn" disabled>↓ Esporta CSV</button></div>
+
+      <div class="filters" aria-label="Filtri dei risultati">
+        <div class="search-wrap"><label for="search">Cerca sede, persona o progetto</label><div class="search-field"><span aria-hidden="true">⌕</span><input id="search" type="search" autocomplete="off" placeholder="Es. Bologna, Sapienza, codice…"></div></div>
+        <div class="filter-field"><label for="program">Bando</label><select id="program"><option value="all">PRIN + Hybrid</option><option value="ordinary">PRIN 2026</option><option value="hybrid">PRIN Hybrid</option></select></div>
+        <div class="filter-field"><label for="area">Area</label><select id="area"><option value="all">Tutte le aree</option></select></div>
+        <div class="filter-field"><label for="sector">Settore / linea</label><select id="sector"><option value="all">Tutti</option></select></div>
+        <div class="filter-field"><label for="role">Ruolo</label><select id="role"><option value="all">PI + RU</option><option value="PI">Solo PI</option><option value="RU">Solo RU</option></select></div>
+        <button class="clear-btn" type="button" id="resetBtn">Azzera filtri</button>
+      </div>
+      <div class="filter-meta"><span id="matchSummary" aria-live="polite">—</span><span class="filter-tip">PI = coordinatore · RU = responsabile di unità</span></div>
+    </section>
+
+    <section class="wrap rankings" id="classifica" aria-labelledby="ranking-title">
+      <div class="chart-panel"><div class="panel-top"><div><span class="panel-label">DISTRIBUZIONE</span><h2>Le prime sedi <span>per contributo MUR</span></h2></div><span class="chart-tag" id="chartTag">Top 8</span></div><div id="chart" class="chart" aria-label="Prime otto sedi per finanziamento"></div><div class="chart-legend"><span><i class="legend-dot pi"></i>Quota PI</span><span><i class="legend-dot ru"></i>Quota RU</span></div></div>
+      <div class="list-panel"><div class="panel-top"><div><span class="panel-label">CLASSIFICA COMPLETA</span><h2 id="ranking-title">Tutte le sedi</h2></div><label class="sort-control" for="sort">Ordina per <select id="sort"><option value="funding">Finanziamento</option><option value="projects">Progetti</option><option value="pi">Progetti PI</option><option value="name">Nome</option></select></label></div>
+        <div class="table-scroll"><table><thead><tr><th scope="col">#</th><th scope="col">Sede beneficiaria</th><th scope="col" class="num">Progetti</th><th scope="col" class="num">PI</th><th scope="col" class="num">RU</th><th scope="col" class="num money-col">Contributo MUR</th><th scope="col"><span class="sr-only">Dettaglio</span></th></tr></thead><tbody id="rankBody"><tr><td colspan="7" class="empty">Caricamento…</td></tr></tbody></table></div>
+        <div class="list-foot"><span id="showing">—</span><button type="button" id="moreBtn" hidden>Mostra altre sedi ↓</button></div>
+      </div>
+    </section>
+
+    <section class="wrap method" id="metodo" aria-labelledby="method-title"><div class="section-kicker"><span>03 / TRASPARENZA</span><span>Numeri leggibili, fonti verificabili</span></div><div class="method-layout"><div><h2 id="method-title">Da dove arrivano<br><em>questi numeri.</em></h2><p>I dati vengono dalle <strong>Tabelle B “Progetti finanziati”</strong> collegate ai decreti del Ministero dell’Università e della Ricerca. La copertura segue la pubblicazione progressiva degli allegati.</p><p>Per ogni sede contiamo i <strong>progetti distinti</strong> con almeno una sua unità PI o RU. Il finanziamento è la <strong>somma dei contributi MUR assegnati alle sue unità</strong>, separati per ruolo. Non sommiamo l’intero budget del progetto a tutte le sedi coinvolte. Le sedi sono raggruppate per codice fiscale dell’ateneo o ente indicato negli allegati.</p><p>Per Hybrid, le linee tematiche compaiono come settore e l’area è indicata come “Trasversale”. Un’area o linea ancora senza decreto acquisito non vale zero. Gli importi sono assegnazioni, non somme già erogate.</p></div><aside class="source-card"><div class="source-head"><span class="source-icon">◎</span><div><strong>Fonti e aggiornamento</strong><span id="sourceDate">In caricamento…</span></div></div><p id="sourceState">I risultati pubblicati sono acquisiti automaticamente quando il sito ospitante esegue l’aggiornamento programmato.</p><div class="source-links"><a href="https://prin.mur.gov.it/Pages/Index/301" target="_blank" rel="noopener noreferrer">Decreti PRIN 2026 ↗</a><a href="https://prin.mur.gov.it/Pages/Index/321" target="_blank" rel="noopener noreferrer">Decreti PRIN Hybrid ↗</a></div><details><summary>Documenti inclusi <span id="docCount"></span></summary><div id="documents" class="document-list"></div></details><div class="source-warning" id="sourceWarnings" hidden></div></aside></div></section>
+  </main>
+  <footer><div class="wrap footer-inner"><span>PRIN <span class="footer-year">2026</span> / Osservatorio indipendente</span><span>Fonte dei dati: MUR · Fanno fede i documenti ministeriali</span><a href="#inizio">Torna su ↑</a></div></footer>
+  <dialog id="detailDialog" aria-labelledby="detailTitle"><div class="dialog-head"><div><span class="panel-label">DETTAGLIO SEDE</span><h2 id="detailTitle"></h2><p id="detailSubtitle"></p></div><button type="button" id="closeDialog" class="dialog-close" aria-label="Chiudi dettaglio">×</button></div><div id="detailContent" class="dialog-content"></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
