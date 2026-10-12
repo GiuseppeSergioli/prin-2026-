@@ -50,6 +50,8 @@ jobs:
           mkdir -p public/data
           cp index.html styles.css app.js public/
           cp data/prin.json public/data/
+          V=$(git rev-parse --short HEAD)
+          sed -i "s#./styles.css#./styles.css?v=$V#; s#./app.js#./app.js?v=$V#" public/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
