@@ -13,7 +13,7 @@
   const sectorName = (s) => ({CYB: 'Cybersicurezza', IA: 'Intelligenza artificiale'})[s] || s;
   const areaName = (a) => ({PE: 'Scienze fisiche e ingegneristiche', LS: 'Scienze della vita', SH: 'Scienze sociali e umanistiche', HYB: 'Trasversale · Hybrid'})[a] || a;
   const safeSource = (s) => { try { const u = new URL(s); return u.protocol === 'https:' && u.hostname === 'www.mur.gov.it' ? u.href : ''; } catch { return ''; } };
-  const state = {data: null, filtered: [], ranking: [], limit: 12, focus: null};
+  const state = {data: null, filtered: [], ranking: [], focus: null};
   const controls = {search: $('search'), program: $('program'), area: $('area'), sector: $('sector'), role: $('role'), sort: $('sort')};
 
   function dateLabel(iso) {
@@ -124,16 +124,15 @@
     $('matchSummary').innerHTML = `<strong>${fmt.format(rows.length)} sedi</strong> · ${fmt.format(projects)} progetti · ${currency(total)}`;
   }
   function renderChart(rows) {
-    const top = [...rows].sort((a,b) => b.funding-a.funding).slice(0,8);
-    $('chartTag').textContent = `Top ${top.length}`;
+    const top = [...rows].sort((a,b) => b.funding-a.funding);
+    $('chartTag').textContent = `${fmt.format(top.length)} sedi`;
     const max = top[0]?.funding || 1;
     $('chart').innerHTML = top.length ? top.map(r => `<div class="bar-row"><div class="bar-head"><button type="button" data-key="${escape(r.key)}" title="${escape(r.name)}">${escape(r.name)}</button><strong>${escape(compact(r.funding))}</strong></div><div class="bar-track" role="img" aria-label="${escape(r.name)}: ${escape(currency(r.piFunding))} come PI, ${escape(currency(r.ruFunding))} come RU"><span class="bar-piece pi" style="width:${(100*r.piFunding/max).toFixed(2)}%"></span><span class="bar-piece ru" style="width:${(100*r.ruFunding/max).toFixed(2)}%"></span></div></div>`).join('') : '<p class="empty">Nessuna sede corrisponde ai filtri.</p>';
   }
   function renderTable(rows) {
-    const part = rows.slice(0, state.limit);
+    const part = rows;
     $('rankBody').innerHTML = part.length ? part.map((r,i) => `<tr><td class="rank-no">${i+1}</td><td><button type="button" class="inst-button" data-key="${escape(r.key)}">${escape(r.name)}<span class="inst-sub">CF ${escape(r.key)}</span></button></td><td class="num">${fmt.format(r.projects.size)}</td><td class="num">${fmt.format(r.pi.size)}</td><td class="num">${fmt.format(r.ru.size)}</td><td class="num money-col">${escape(currency(r.funding))}<span class="funding-split">PI ${escape(compact(r.piFunding))} · RU ${escape(compact(r.ruFunding))}</span></td><td><button type="button" class="row-arrow" data-key="${escape(r.key)}" aria-label="Apri ${escape(r.name)}">↗</button></td></tr>`).join('') : '<tr><td colspan="7" class="empty">Nessuna sede trovata. Prova ad allargare i filtri.</td></tr>';
     $('showing').textContent = `Mostrate ${fmt.format(part.length)} di ${fmt.format(rows.length)} sedi`;
-    $('moreBtn').hidden = rows.length <= state.limit;
   }
   function render() {
     if (!state.data) return;
@@ -207,12 +206,10 @@
     input.addEventListener(name === 'search' ? 'input' : 'change', () => {
       if (!state.data) return;
       if (name === 'program' || name === 'area') refreshOptions();
-      state.limit = 12;
       render();
     });
   }
-  $('resetBtn').addEventListener('click',()=>{for(const [k,input] of Object.entries(controls)) input.value = k === 'search' ? '' : k === 'sort' ? 'funding' : 'all'; refreshOptions();state.limit=12;render();});
-  $('moreBtn').addEventListener('click',()=>{state.limit+=12;renderTable(state.ranking);});
+  $('resetBtn').addEventListener('click',()=>{for(const [k,input] of Object.entries(controls)) input.value = k === 'search' ? '' : k === 'sort' ? 'funding' : 'all'; refreshOptions();render();});
   $('exportBtn').addEventListener('click',exportCsv);
   for (const id of ['chart','rankBody']) $(id).addEventListener('click',e => {const target=e.target.closest('[data-key]');if(target) detail(target.dataset.key);});
   $('closeDialog').addEventListener('click',()=>$('detailDialog').close());
