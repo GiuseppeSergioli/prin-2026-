@@ -123,15 +123,10 @@
     $('rolesHint').textContent = `${fmt.format(units.filter(u=>u.role==='PI').length)} PI · ${fmt.format(units.filter(u=>u.role==='RU').length)} RU`;
     $('matchSummary').innerHTML = `<strong>${fmt.format(rows.length)} sedi</strong> · ${fmt.format(projects)} progetti · ${currency(total)}`;
   }
-  function renderChart(rows) {
-    const top = [...rows].sort((a,b) => b.funding-a.funding);
-    $('chartTag').textContent = `${fmt.format(top.length)} sedi`;
-    const max = top[0]?.funding || 1;
-    $('chart').innerHTML = top.length ? top.map(r => `<div class="bar-row"><div class="bar-head"><button type="button" data-key="${escape(r.key)}" title="${escape(r.name)}">${escape(r.name)}</button><strong>${escape(compact(r.funding))}</strong></div><div class="bar-track" role="img" aria-label="${escape(r.name)}: ${escape(currency(r.piFunding))} come PI, ${escape(currency(r.ruFunding))} come RU"><span class="bar-piece pi" style="width:${(100*r.piFunding/max).toFixed(2)}%"></span><span class="bar-piece ru" style="width:${(100*r.ruFunding/max).toFixed(2)}%"></span></div></div>`).join('') : '<p class="empty">Nessuna sede corrisponde ai filtri.</p>';
-  }
   function renderTable(rows) {
     const part = rows;
-    $('rankBody').innerHTML = part.length ? part.map((r,i) => `<tr><td class="rank-no">${i+1}</td><td><button type="button" class="inst-button" data-key="${escape(r.key)}">${escape(r.name)}<span class="inst-sub">CF ${escape(r.key)}</span></button></td><td class="num">${fmt.format(r.projects.size)}</td><td class="num">${fmt.format(r.pi.size)}</td><td class="num">${fmt.format(r.ru.size)}</td><td class="num money-col">${escape(currency(r.funding))}<span class="funding-split">PI ${escape(compact(r.piFunding))} · RU ${escape(compact(r.ruFunding))}</span></td><td><button type="button" class="row-arrow" data-key="${escape(r.key)}" aria-label="Apri ${escape(r.name)}">↗</button></td></tr>`).join('') : '<tr><td colspan="7" class="empty">Nessuna sede trovata. Prova ad allargare i filtri.</td></tr>';
+    const max = Math.max(1, ...rows.map(r => r.funding));
+    $('rankBody').innerHTML = part.length ? part.map((r,i) => `<tr><td class="rank-no">${i+1}</td><td><button type="button" class="inst-button" data-key="${escape(r.key)}">${escape(r.name)}<span class="inst-sub">CF ${escape(r.key)}</span></button><div class="bar-track institution-bar" role="img" aria-label="${escape(r.name)}: ${escape(currency(r.piFunding))} come PI, ${escape(currency(r.ruFunding))} come RU" title="Quota PI: ${escape(currency(r.piFunding))} · Quota RU: ${escape(currency(r.ruFunding))}"><span class="bar-piece pi" style="width:${100*r.piFunding/max}%"></span><span class="bar-piece ru" style="width:${100*r.ruFunding/max}%"></span></div></td><td class="num">${fmt.format(r.projects.size)}</td><td class="num">${fmt.format(r.pi.size)}</td><td class="num">${fmt.format(r.ru.size)}</td><td class="num money-col">${escape(currency(r.funding))}<span class="funding-split">PI ${escape(compact(r.piFunding))} · RU ${escape(compact(r.ruFunding))}</span></td><td><button type="button" class="row-arrow" data-key="${escape(r.key)}" aria-label="Apri ${escape(r.name)}">↗</button></td></tr>`).join('') : '<tr><td colspan="7" class="empty">Nessuna sede trovata. Prova ad allargare i filtri.</td></tr>';
     $('showing').textContent = `Mostrate ${fmt.format(part.length)} di ${fmt.format(rows.length)} sedi`;
   }
   function render() {
@@ -140,7 +135,6 @@
     state.ranking = group(state.filtered);
     sortRows(state.ranking);
     renderKpis(state.filtered,state.ranking);
-    renderChart(state.ranking);
     renderTable(state.ranking);
     $('exportBtn').disabled = state.filtered.length === 0;
     syncQuery();
@@ -211,7 +205,7 @@
   }
   $('resetBtn').addEventListener('click',()=>{for(const [k,input] of Object.entries(controls)) input.value = k === 'search' ? '' : k === 'sort' ? 'funding' : 'all'; refreshOptions();render();});
   $('exportBtn').addEventListener('click',exportCsv);
-  for (const id of ['chart','rankBody']) $(id).addEventListener('click',e => {const target=e.target.closest('[data-key]');if(target) detail(target.dataset.key);});
+  $('rankBody').addEventListener('click',e => {const target=e.target.closest('[data-key]');if(target) detail(target.dataset.key);});
   $('closeDialog').addEventListener('click',()=>$('detailDialog').close());
   $('detailDialog').addEventListener('close',()=>{state.focus=null;syncQuery();});
   $('shareBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(location.href);toast('Link ai filtri copiato');}catch{toast('Copia il link dalla barra degli indirizzi');}});
