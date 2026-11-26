@@ -196,6 +196,111 @@
       console.error('PRIN data load:',err);
     }
   }
+  /* Suggerimenti cliccabili: compaiono dopo 4 lettere. Non toccano il filtro automatico,
+     che continua a rispondere a ogni lettera con il listener qui sotto. */
+  // SUGGEST-PURE-START
+  const SUGGEST_MIN = 4, SUGGEST_MAX = 4;
+  function foldMap(text) {
+    const chars = [...text], map = []; let folded = '';
+    chars.forEach((ch, i) => { const f = fold(ch); for (let k = 0; k < f.length; k++) map.push(i); folded += f; });
+    return {chars, folded, map};
+  }
+  function mark(text, term) {
+    const {chars, folded, map} = foldMap(text), at = folded.indexOf(term);
+    if (at < 0) return escape(text);
+    const s = map[at], e = map[at + term.length - 1] + 1;
+    return escape(chars.slice(0, s).join('')) + '<mark>' + escape(chars.slice(s, e).join('')) + '</mark>' + escape(chars.slice(e).join(''));
+  }
+  const where = (u) => u.program === 'hybrid' && sectorName(u.sector) === u.sector ? 'Hybrid' : sectorName(u.sector);
+  function buildSuggestions(pool, term) {
+    const seats = new Map(), people = new Map(), projects = new Map();
+    for (const u of pool) {
+      if (fold(u.ateneo).includes(term)) {
+        const s = seats.get(u.cf) || seats.set(u.cf, {text: u.ateneo, set: new Set()}).get(u.cf);
+        s.set.add(u.project);
+      }
+      if (fold(u.responsabile).includes(term)) {
+        const key = fold(u.responsabile) + '|' + u.cf;
+        if (!people.has(key)) people.set(key, {text: u.responsabile, sub: `${u.ateneo} · ${u.role} · ${where(u)}`});
+      }
+      if ((fold(u.titolo).includes(term) || fold(u.project).includes(term)) && !projects.has(u.project))
+        projects.set(u.project, {text: u.titolo, sub: `${u.project} · ${where(u)}`});
+    }
+    const rank = (r) => { const f = fold(r.text); return f.startsWith(term) ? 0 : f.includes(' ' + term) ? 1 : 2; };
+    const top = (rows) => rows.sort((a, b) => rank(a) - rank(b) || a.text.localeCompare(b.text, 'it')).slice(0, SUGGEST_MAX);
+    return [
+      {label: 'Sedi', rows: top([...seats.values()].map(s => ({text: s.text, sub: `${fmt.format(s.set.size)} ${s.set.size === 1 ? 'progetto' : 'progetti'}`})))},
+      {label: 'Persone', rows: top([...people.values()])},
+      {label: 'Progetti', rows: top([...projects.values()])}
+    ].filter(g => g.rows.length);
+  }
+  // SUGGEST-PURE-END
+  const suggest = {box: $('suggest'), items: [], active: -1};
+  controls.search.setAttribute('role', 'combobox');
+  controls.search.setAttribute('aria-autocomplete', 'list');
+  controls.search.setAttribute('aria-controls', 'suggest');
+  controls.search.setAttribute('aria-expanded', 'false');
+  function closeSuggest() {
+    suggest.box.hidden = true; suggest.active = -1;
+    controls.search.setAttribute('aria-expanded', 'false');
+    controls.search.removeAttribute('aria-activedescendant');
+  }
+  function setActive(i) {
+    const nodes = suggest.box.querySelectorAll('.sg-item');
+    nodes.forEach((n, k) => { n.classList.toggle('sg-active', k === i); n.setAttribute('aria-selected', String(k === i)); });
+    suggest.active = i;
+    if (i >= 0) { controls.search.setAttribute('aria-activedescendant', 'sg-' + i); nodes[i].scrollIntoView({block: 'nearest'}); }
+    else controls.search.removeAttribute('aria-activedescendant');
+  }
+  function updateSuggest() {
+    const raw = controls.search.value.trim();
+    if (!state.data || [...raw].length < SUGGEST_MIN) return closeSuggest();
+    const term = fold(raw);
+    const pool = state.data.units.filter(u =>
+      (controls.program.value === 'all' || u.program === controls.program.value) &&
+      (controls.area.value === 'all' || area(u) === controls.area.value) &&
+      (controls.sector.value === 'all' || u.sector === controls.sector.value) &&
+      (controls.role.value === 'all' || u.role === controls.role.value));
+    const groups = buildSuggestions(pool, term);
+    suggest.items = [];
+    let html = '';
+    for (const g of groups) {
+      html += `<div class="sg-head" role="presentation">${g.label}</div>`;
+      for (const r of g.rows) {
+        const i = suggest.items.push(r.text) - 1;
+        html += `<div class="sg-item" role="option" id="sg-${i}" data-i="${i}" title="${escape(r.text)}" aria-selected="false"><div class="sg-main">${mark(r.text, term)}</div>${r.sub ? `<div class="sg-sub">${mark(r.sub, term)}</div>` : ''}</div>`;
+      }
+    }
+    if (!suggest.items.length) return closeSuggest();
+    suggest.box.innerHTML = html;
+    suggest.box.hidden = false; suggest.active = -1;
+    controls.search.setAttribute('aria-expanded', 'true');
+    controls.search.removeAttribute('aria-activedescendant');
+  }
+  function pickSuggestion(i) {
+    controls.search.value = suggest.items[i];
+    closeSuggest();
+    render();
+    controls.search.focus();
+  }
+  controls.search.addEventListener('input', updateSuggest);
+  controls.search.addEventListener('keydown', e => {
+    if (suggest.box.hidden) return;
+    const n = suggest.items.length;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActive(e.key === 'ArrowDown' ? (suggest.active + 1) % n : (suggest.active <= 0 ? n - 1 : suggest.active - 1));
+    } else if (e.key === 'Enter' && suggest.active >= 0) {
+      e.preventDefault(); pickSuggestion(suggest.active);
+    } else if (e.key === 'Escape') {
+      e.preventDefault(); closeSuggest();
+    }
+  });
+  controls.search.addEventListener('blur', closeSuggest);
+  suggest.box.addEventListener('mousedown', e => e.preventDefault());
+  suggest.box.addEventListener('click', e => { const t = e.target.closest('[data-i]'); if (t) pickSuggestion(Number(t.dataset.i)); });
+  $('resetBtn').addEventListener('click', closeSuggest);
+
   for (const [name,input] of Object.entries(controls)) {
     input.addEventListener(name === 'search' ? 'input' : 'change', () => {
       if (!state.data) return;
