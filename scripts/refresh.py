@@ -105,14 +105,24 @@ def discover(markup: bytes, program: str) -> list[dict]:
 
 def annex_url(markup: bytes, page: str) -> str:
     doc = html.fromstring(markup)
+    preferred = fallback = None
     for a in doc.xpath('//a[@href]'):
         url = urllib.parse.urljoin(page, a.get('href'))
         label = urllib.parse.unquote(a.text_content() + ' ' + url.split('/')[-1])
         label = re.sub(r"[_\s]+", " ", label).lower()
-        if (re.search(r"tabella\s*b\b", label) and 'finanziat' in label
+        if not (re.search(r"tabella\s*b\b", label)
                 and url.lower().split('?')[0].endswith('.pdf')
                 and urllib.parse.urlsplit(url).hostname in {'mur.gov.it', 'www.mur.gov.it'}):
-            return url
+            continue
+        # Di norma il file si chiama "Tabella B - Progetti finanziati"; per PE4 il MUR
+        # lo ha chiamato "Tabella B_Graduatoria finale". La Tabella A (graduatoria dei
+        # punteggi) resta esclusa perché non contiene "tabella b".
+        if 'finanziat' in label:
+            preferred = preferred or url
+        else:
+            fallback = fallback or url
+    if preferred or fallback:
+        return preferred or fallback
     raise ValueError(f"Nessuna Tabella B dei progetti finanziati: {page}")
 
 
