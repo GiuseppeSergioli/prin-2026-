@@ -300,6 +300,11 @@
   suggest.box.addEventListener('mousedown', e => e.preventDefault());
   suggest.box.addEventListener('click', e => { const t = e.target.closest('[data-i]'); if (t) pickSuggestion(Number(t.dataset.i)); });
   $('resetBtn').addEventListener('click', closeSuggest);
+  /* Clic sul logo: ricarica la pagina da capo, senza filtri né scheda aperta (i filtri vivono nell'indirizzo). */
+  document.querySelector('.brand').addEventListener('click', e => {
+    e.preventDefault();
+    location.assign(location.pathname);
+  });
 
   for (const [name,input] of Object.entries(controls)) {
     input.addEventListener(name === 'search' ? 'input' : 'change', () => {
