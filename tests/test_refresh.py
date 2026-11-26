@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from refresh import category, discover, parse_annex, parse_rows, validate  # noqa: E402
+from refresh import annex_url, category, discover, parse_annex, parse_rows, validate  # noqa: E402
 
 
 class RefreshTest(unittest.TestCase):
@@ -35,6 +35,19 @@ class RefreshTest(unittest.TestCase):
         self.assertEqual([(u['unit'], u['role'], u['mur']) for u in rows],
                          [('2026ABCDEF_001', 'PI', 200000), ('2026ABCDEF_002', 'RU', 120000)])
         self.assertEqual(rows[0]['titolo'], 'Un progetto di prova')
+
+    def test_annex_with_graduatoria_name_is_found(self):
+        page = "https://www.mur.gov.it/it/atti-e-normativa/x"
+        base = "https://www.mur.gov.it/sites/default/files/2026-10/"
+        markup = (
+            f'<a href="{base}PE4_Tabella_A_Graduatoria%20finale.pdf">Tabella A</a>'
+            f'<a href="{base}PE4_Tabella_B_Graduatoria%20finale.pdf">Tabella B</a>'
+        ).encode()
+        self.assertTrue(annex_url(markup, page).endswith("PE4_Tabella_B_Graduatoria%20finale.pdf"))
+        both = markup + f'<a href="{base}PE4_Tabella_B_Progetti_finanziati.pdf">B</a>'.encode()
+        self.assertTrue(annex_url(both, page).endswith("Progetti_finanziati.pdf"))
+        with self.assertRaises(ValueError):
+            annex_url(f'<a href="{base}PE4_Tabella_A_Graduatoria%20finale.pdf">A</a>'.encode(), page)
 
     def test_pdf_is_read_and_balanced(self):
         import fitz
