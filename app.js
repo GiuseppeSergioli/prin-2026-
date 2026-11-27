@@ -10,7 +10,13 @@
   const fold = (v) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const area = (u) => u.program === 'hybrid' ? 'HYB' : u.sector.slice(0, 2);
   const programName = (p) => p === 'hybrid' ? 'PRIN Hybrid' : 'PRIN 2026';
-  const sectorName = (s) => ({CYB: 'Cybersicurezza', IA: 'Intelligenza artificiale'})[s] || s;
+  const sectorName = (s) => ({
+    CYB: 'Cybersicurezza',
+    IA: 'Intelligenza artificiale',
+    'HIGH-PERFORMANCE-COMPUTING': 'High-performance computing',
+    'INNOVATIVE-TECHNOLOGIES-AND-PATHWAY': 'Innovative technologies and pathway',
+    'QUANTUM-TECHNOLOGIES': 'Quantum technologies'
+  })[s] || s;
   const areaName = (a) => ({PE: 'Scienze fisiche e ingegneristiche', LS: 'Scienze della vita', SH: 'Scienze sociali e umanistiche', HYB: 'Trasversale · Hybrid'})[a] || a;
   const safeSource = (s) => { try { const u = new URL(s); return u.protocol === 'https:' && u.hostname === 'www.mur.gov.it' ? u.href : ''; } catch { return ''; } };
   const state = {data: null, filtered: [], ranking: [], focus: null};
@@ -75,8 +81,24 @@
     const areas = [...new Set(list.map(area))].sort((a,b) => ['PE','LS','SH','HYB'].indexOf(a) - ['PE','LS','SH','HYB'].indexOf(b));
     options(controls.area, areas, 'Tutte le aree', Object.fromEntries(areas.map(a => [a, areaName(a)])));
     const narrowed = list.filter(u => controls.area.value === 'all' || area(u) === controls.area.value);
-    const sectors = [...new Set(narrowed.map(u => u.sector))].sort((a,b) => a.localeCompare(b,'it',{numeric:true}));
-    options(controls.sector, sectors, 'Tutti i settori / linee');
+    const codes = (hybrid) => [...new Set(narrowed.filter(u => (u.program === 'hybrid') === hybrid).map(u => u.sector))];
+    const lines = codes(true).sort((a,b) => sectorName(a).localeCompare(sectorName(b),'it'));
+    const sectors = codes(false).sort((a,b) => a.localeCompare(b,'it',{numeric:true}));
+    sectorOptions(controls.sector, lines, sectors);
+  }
+  // Menu settore/linea: prima le linee Hybrid, poi i settori ordinari, in due gruppi con etichetta.
+  function sectorOptions(select, lines, sectors) {
+    const prev = select.value;
+    select.replaceChildren();
+    select.add(new Option('Tutti i settori / linee', 'all'));
+    for (const [label, values] of [['Linee (PRIN Hybrid)', lines], ['Settori (PRIN 2026)', sectors]]) {
+      if (!values.length) continue;
+      const group = document.createElement('optgroup');
+      group.label = label;
+      for (const value of values) group.append(new Option(sectorName(value), value));
+      select.append(group);
+    }
+    select.value = [...lines, ...sectors].includes(prev) ? prev : 'all';
   }
   function group(units) {
     const map = new Map();

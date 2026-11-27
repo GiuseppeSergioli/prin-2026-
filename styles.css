@@ -50,3 +50,6 @@ dialog{border:0;border-radius:18px;padding:0;width:min(700px,calc(100% - 28px));
 .sg-main{color:var(--navy);font-size:13px;font-weight:650;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sg-sub{color:var(--muted);font-size:11.5px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sg-item mark{background:#b5f2d780;color:inherit;border-radius:3px;padding:0 1px}
+/* Etichette dei gruppi nel menu settore/linea */
+.filters select optgroup{font-style:normal;font-weight:700;color:#637686}
+.filters select option{font-weight:400;color:var(--navy)}
